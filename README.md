@@ -54,7 +54,6 @@ UWB-LOS-NLOS-Data-Set/
 ```
 
 ## 5. How to Run
-
 ### Clone the Repository
 ```bash
 git clone https://github.com/jacobfss777/csc3105_data_project.git
