@@ -252,6 +252,16 @@ trained to predict \texttt{Path2\_Measured\_Range} using five Path-2-specific fe
 \texttt{Path2\_Amp}, \texttt{Path2\_Delay}, \texttt{CIR\_PWR}, \texttt{STDEV\_NOISE},
 \texttt{NLOS}. The same 80:20 split is maintained (\texttt{random\_state=42}).
 
+\subsubsection{Multi-Layer Perceptron (MLP) Classifier}
+As a comparative solution, a supervised Multi-Layer Perceptron (MLP) was implemented. 
+
+The architecture consists of an input layer (9 features), two hidden layers with 64 
+and 32 neurons respectively, and a binary output layer using a Softmax activation 
+function. We utilised the 'Adam' optimiser and Rectified Linear Unit (ReLU) 
+activation to capture the non-linear signal patterns identified in the 
+feature-importance stage. Training was conducted over 500 iterations using the 
+same 80:20 stratified split to ensure a fair comparison with the ensemble method.
+
 \subsection{Data Visualisation (3rd D)}
 Three key visualisations are produced:
 \begin{enumerate}
@@ -279,16 +289,15 @@ The Random Forest Classifier achieves a test-set accuracy of \textbf{91.40\%} on
     \item True Positives (NLOS correctly identified): \textbf{3{,}779}
 \end{itemize}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_cell1_out1.png}
-  \caption{Confusion matrix for the Random Forest LOS/NLOS classifier (Path 1).
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig1.png}
+    \caption{Confusion matrix for the Random Forest LOS/NLOS classifier (Path 1).
            Rows represent actual classes (0 = LOS, 1 = NLOS);
            columns represent predicted classes.
            Test set: 8{,}400 samples (42{,}000 total, 80:20 split).}
-  \label{fig:cm}
+    \label{fig:placeholder}
 \end{figure}
-
 From these counts the per-class metrics are:
 \begin{equation}
   \text{Precision}_\text{LOS} = \frac{3899}{3899+434} \approx 0.900
@@ -335,7 +344,7 @@ given the diversity of the seven indoor environments.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\columnwidth]{fig_cell2_out1.png}
+  \includegraphics[width=\columnwidth]{fig2.png}
   \caption{Path 1 distance estimation: Actual vs.\ Predicted measured range (m).
            Green scatter points; dashed red line = perfect prediction ($y = x$).
            RMSE = 1.5027\,m, $R^{2}$ = 0.5921. Test set: 8{,}400 samples.}
@@ -356,7 +365,7 @@ information (\texttt{Path2\_Amp}, \texttt{Path2\_Delay}), achieves:
     \item RMSE = \textbf{1.7823\,m}
 \end{itemize}
 
-Fig.~\ref{fig:reg2} shows the corresponding Actual vs.\ Predicted scatter. The wider
+Fig.~\ref{fig:reg1} shows the corresponding Actual vs.\ Predicted scatter. The wider
 spread compared to Path~1 (Fig.~\ref{fig:reg1}) is expected: the second-path CIR peak
 is inherently noisier because it represents a reflected or diffracted component whose
 amplitude is attenuated and whose delay depends on unknown reflector geometry. The
@@ -364,14 +373,13 @@ orange scatter cloud shows a systematic tendency to under-predict at long ranges
 ($> 15$\,m), indicating that the simple speed-of-light delay conversion
 ($R_2 = R_1 + \Delta\tau_2 \times 0.29979$) may introduce errors when the second path
 involves multiple reflections rather than a single bounce.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_cell3_out3.png}
-  \caption{Path 2 distance estimation: Actual vs.\ Predicted Path 2 range (m).
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig3.png}
+    \caption{Path 2 distance estimation: Actual vs.\ Predicted Path 2 range (m).
            Orange scatter points; dashed red line = perfect prediction ($y = x$).
            RMSE = 1.7823\,m. Test set: 8{,}400 samples.}
-  \label{fig:reg2}
+    \label{fig:placeholder}
 \end{figure}
 
 \subsection{Summary of Results}
@@ -397,6 +405,26 @@ Table~\ref{tab:results} consolidates all quantitative outcomes.
     \bottomrule
   \end{tabular}
 \end{table}
+
+\subsection{Algorithm Comparison: Random Forest vs. MLP}
+While the MLP represents a more sophisticated neural network approach, it achieved  a test accuracy of \textbf{81.39\%}, significantly lower than the Random Forest's 
+91.40\%. As illustrated in the MLP confusion matrix (Fig. 4), the model exhibited 
+a high number of False Negatives (1,451), frequently misclassifying NLOS signals 
+as LOS. 
+
+The superior performance of the Random Forest can be attributed to the nature of 
+UWB diagnostic features; ensemble tree methods are inherently better at 
+identifying discrete physical thresholds in signal power (e.g., \texttt{CIR\_PWR} 
+drops) compared to the weight-based linear transformations in a shallow MLP. 
+Consequently, the Random Forest remains the primary choice for our proposed 
+positioning solution due to its higher reliability in detecting obstacles.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig4.png}
+    \caption{Fig. 4. Confusion Matrix for Multi-Layer Perceptron (MLP) Classifier. While the model shows high sensitivity for LOS signals, the significant number of False Negatives (NLOS misclassified as LOS) indicates a lower reliability for safety-critical indoor positioning compared to the Random Forest approach. }
+    \label{fig:placeholder}
+\end{figure}
 
 \subsection{Discussion}
 
@@ -451,9 +479,7 @@ ranging without requiring deep-learning infrastructure.
 Several directions can further improve the system:
 
 \begin{itemize}
-    \item \textbf{MLP / deep learning comparison.} A systematic grid-search over MLP
-          architectures and regularisation strengths would allow a rigorous accuracy
-          comparison against the Random Forest baseline reported here.
+    \item \textbf{MLP / deep learning comparison.} The current MLP classifier exhibited a high false-negative rate (1,451 samples), indicating that the model often misidentifies NLOS signals as LOS [cite: 85, 90]. Future work will involve a systematic grid search or Bayesian optimization over learning rates, hidden layer architectures, and dropout regularisation to reduce this bias and match the reliability demonstrated by the Random Forest baseline . 
     \item \textbf{End-to-end CNN on raw CIR.} Training a 1D convolutional network
           directly on the 1{,}016-sample CIR vector could capture subtle waveform
           patterns that are lost in the scalar-feature projection.
