@@ -163,30 +163,63 @@ This is applied column-wise: \texttt{df[cir\_cols] = df[cir\_cols].div(df['RXPAC
 \subsubsection{Feature Importance Ranking}
 With 1\,016 raw CIR dimensions, direct classification would be memory-intensive and
 prone to the curse of dimensionality. We therefore train a preliminary
-\texttt{RandomForestClassifier(n\_estimators=100, random\_state=42)} on 14 diagnostic
-features to obtain Gini-impurity-based importance scores. The candidate features are:
-\texttt{Measured\_range}, \texttt{FP\_IDX}, \texttt{FP\_AMP1}, \texttt{FP\_AMP2},
+\texttt{RandomForestClassifier(n\_estimators=100, random\_state=42)} on all 14 diagnostic
+features to obtain Gini-impurity-based importance scores (Fig.~\ref{fig:feat_imp}).
+The candidate features are:
+\texttt{RANGE}, \texttt{FP\_IDX}, \texttt{FP\_AMP1}, \texttt{FP\_AMP2},
 \texttt{FP\_AMP3}, \texttt{STDEV\_NOISE}, \texttt{CIR\_PWR}, \texttt{MAX\_NOISE},
 \texttt{RXPACC}, \texttt{CH}, \texttt{FRAME\_LEN}, \texttt{PREAM\_LEN},
-\texttt{BITRATE}, \texttt{PRFR}. Features with near-zero importance (configuration
-constants such as \texttt{CH}, \texttt{FRAME\_LEN}, \texttt{PREAM\_LEN},
-\texttt{BITRATE}, \texttt{PRFR}) are discarded, leaving nine predictive features:
+\texttt{BITRATE}, \texttt{PRFR}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{fig0.png}
+    \caption{Gini-impurity feature importance scores for all 14 diagnostic features,
+             ranked by a preliminary Random Forest Classifier
+             (\texttt{n\_estimators=100, random\_state=42}).
+             \texttt{RXPACC} dominates ($\approx$0.30), followed by \texttt{RANGE}
+             and \texttt{CIR\_PWR} ($\approx$0.14--0.15). Configuration constants
+             \texttt{CH}, \texttt{BITRATE}, \texttt{PRFR}, \texttt{PREAM\_LEN}, and
+             \texttt{FRAME\_LEN} contribute near-zero importance and are discarded.}
+    \label{fig:feat_imp}
+\end{figure}
+
+As shown in Fig.~\ref{fig:feat_imp}, \texttt{RXPACC} is the single most
+discriminative feature ($\approx$0.30 importance score). This is physically
+intuitive: \texttt{RXPACC} counts the number of preamble symbols accumulated by
+the receiver, which is directly affected by the signal-to-noise ratio. Under LOS
+conditions the strong direct path allows the receiver to accumulate more symbols,
+yielding a higher \texttt{RXPACC} value, whereas NLOS obstruction reduces preamble
+accumulation. The measured range (\texttt{RANGE}, $\approx$0.15) and total CIR
+power (\texttt{CIR\_PWR}, $\approx$0.14) are the next strongest predictors,
+reflecting the systematic positive-bias and energy-spreading effects of NLOS
+multipath. The three first-path amplitude estimates (\texttt{FP\_AMP3},
+\texttt{FP\_AMP2}, \texttt{FP\_AMP1}) and noise statistics (\texttt{MAX\_NOISE},
+\texttt{STDEV\_NOISE}) each contribute moderately, while \texttt{FP\_IDX} provides
+a small but non-negligible signal about first-path arrival timing.
+
+In contrast, the five configuration constants \texttt{CH}, \texttt{BITRATE},
+\texttt{PRFR}, \texttt{PREAM\_LEN}, and \texttt{FRAME\_LEN} all register
+near-zero importance. This is expected: these parameters are fixed hardware
+settings that do not vary meaningfully across measurements in this dataset and
+therefore carry no discriminative information about LOS versus NLOS propagation.
+They are discarded, leaving the following nine predictive features:
 
 \begin{center}
 \small
-\begin{tabular}{ll}
+\begin{tabular}{lll}
 \toprule
-\textbf{Feature} & \textbf{Meaning} \\
+\textbf{Rank} & \textbf{Feature} & \textbf{Meaning} \\
 \midrule
-\texttt{RXPACC}       & Preamble accumulation count \\
-\texttt{CIR\_PWR}    & Channel impulse response power \\
-\texttt{FP\_AMP3}    & First-path amplitude (3rd estimate) \\
-\texttt{FP\_AMP2}    & First-path amplitude (2nd estimate) \\
-\texttt{MAX\_NOISE}  & Maximum noise sample in CIR \\
-\texttt{FP\_AMP1}    & First-path amplitude (1st estimate) \\
-\texttt{STDEV\_NOISE}& Standard deviation of noise floor \\
-\texttt{FP\_IDX}     & First-path index in CIR array \\
-\texttt{Measured\_range} & Time-of-flight range estimate \\
+1 & \texttt{RXPACC}       & Preamble accumulation count \\
+2 & \texttt{RANGE}        & Time-of-flight range estimate \\
+3 & \texttt{CIR\_PWR}    & Channel impulse response power \\
+4 & \texttt{FP\_AMP3}    & First-path amplitude (3rd estimate) \\
+5 & \texttt{MAX\_NOISE}  & Maximum noise sample in CIR \\
+6 & \texttt{FP\_AMP2}    & First-path amplitude (2nd estimate) \\
+7 & \texttt{FP\_AMP1}    & First-path amplitude (1st estimate) \\
+8 & \texttt{STDEV\_NOISE}& Standard deviation of noise floor \\
+9 & \texttt{FP\_IDX}     & First-path index in CIR array \\
 \bottomrule
 \end{tabular}
 \end{center}
