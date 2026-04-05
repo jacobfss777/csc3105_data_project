@@ -44,13 +44,19 @@ Performance indicators are visualized to validate model behavior.
 UWB-LOS-NLOS-Data-Set/
 	code/
 		CSC3105_Main_Pipeline.ipynb
-		datamining.py
-		dataprep.py
-		uwb_dataset.py
 	dataset/
 		uwb_dataset_part1.csv
-		...
+		uwb_dataset_part2.csv
+		uwb_dataset_part3.csv
+		uwb_dataset_part4.csv
+		uwb_dataset_part5.csv
+		uwb_dataset_part6.csv
 		uwb_dataset_part7.csv
+	LICENSE.txt
+	overleaf_report.tex
+	overleaf_report.pdf
+	cover.pdf
+	README.md
 ```
 
 ## 5. How to Run
@@ -62,8 +68,10 @@ cd csc3105_data_project
 
 ### Install Dependencies
 ```bash
-pip install pandas scikit-learn matplotlib seaborn numpy
+pip install pandas scikit-learn matplotlib seaborn numpy jupyter
 ```
 
 ### Run the Notebook
 Open `code/CSC3105_Main_Pipeline.ipynb` in VS Code and run all cells in order.
+
+The notebook expects the CSV files to remain in the `dataset/` folder with the current filenames.
